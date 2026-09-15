@@ -35,3 +35,100 @@ ol { list-style: none; padding: 0; margin: 0; }
 ol li { display: flex; justify-content: space-between; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.08); }
 .text-button { width: 100%; margin-top: 16px; background: transparent; border: 0; color: #9ca3af; padding: 12px; }
 @media (max-width: 480px) { .menu-grid { grid-template-columns: 1fr; } .topbar { align-items: flex-end; } }
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 8px 0;
+}
+
+.back-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 24px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.upload-card,
+.empty-card {
+  background: white;
+  border-radius: 24px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.upload-button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 16px;
+  background: #171717;
+  color: white;
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.upload-button.disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.upload-button input {
+  display: none;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.photo-card {
+  overflow: hidden;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+}
+
+.photo-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.photo-info {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+.status-message,
+.success {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.success {
+  font-weight: 600;
+}
+
+.empty-card {
+  text-align: center;
+}
+
+.empty-card p {
+  margin-bottom: 0;
+}
+
+@media (min-width: 700px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
