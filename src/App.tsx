@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import JSZip from 'jszip'
 import { supabase } from './lib/supabase'
 import ChallengesPage from './pages/ChallengesPage'
 import HostPage from './pages/HostPage'
@@ -39,6 +40,8 @@ export default function App() {
 
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [downloadingGallery, setDownloadingGallery] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -64,6 +67,23 @@ export default function App() {
       void loadLeaderboard()
     }
   }, [player])
+
+  useEffect(() => {
+    if (!selectedPhoto) return
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedPhoto(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [selectedPhoto])
 
   async function loadLeaderboard() {
     if (!supabase) return
@@ -324,6 +344,54 @@ export default function App() {
       .data.publicUrl
   }
 
+  async function downloadGallery() {
+    if (photos.length === 0 || downloadingGallery) return
+
+    try {
+      setDownloadingGallery(true)
+      setMessage(`Galerie wird vorbereitet: 0 von ${photos.length}`)
+      const zip = new JSZip()
+
+      for (let index = 0; index < photos.length; index += 1) {
+        const photo = photos[index]
+        const response = await fetch(photoUrl(photo.storage_path))
+
+        if (!response.ok) {
+          throw new Error(`Foto ${index + 1} konnte nicht geladen werden.`)
+        }
+
+        const blob = await response.blob()
+        const safeName = (photo.users?.username ?? 'Gast')
+          .replace(/[^a-zA-Z0-9äöüÄÖÜß_-]+/g, '-')
+        const number = String(index + 1).padStart(3, '0')
+
+        zip.file(`${number}-${safeName}.jpg`, blob)
+        setMessage(`Galerie wird vorbereitet: ${index + 1} von ${photos.length}`)
+      }
+
+      const archive = await zip.generateAsync({ type: 'blob' })
+      const downloadUrl = URL.createObjectURL(archive)
+      const link = document.createElement('a')
+
+      link.href = downloadUrl
+      link.download = '50-jahre-karin-roger-fotogalerie.zip'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(downloadUrl)
+
+      setMessage('Galerie wurde erfolgreich heruntergeladen.')
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Galerie konnte nicht heruntergeladen werden.',
+      )
+    } finally {
+      setDownloadingGallery(false)
+    }
+  }
+
   // ==========================================
   // BENUTZER WECHSELN
   // ==========================================
@@ -505,30 +573,46 @@ export default function App() {
         </header>
 
         <section className="upload-card">
-          <label
-            className={`upload-button ${
-              uploading ? 'disabled' : ''
-            }`}
+          <div className="upload-choice-grid">
+            <label className={`upload-button ${uploading ? 'disabled' : ''}`}>
+              {uploading ? 'Wird hochgeladen…' : '📷 Foto aufnehmen'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={uploading}
+                onChange={event => {
+                  const file = event.target.files?.[0]
+                  void handlePhotoUpload(file)
+                  event.target.value = ''
+                }}
+              />
+            </label>
+
+            <label className={`upload-secondary-button ${uploading ? 'disabled' : ''}`}>
+              🖼️ Foto hochladen
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploading}
+                onChange={event => {
+                  const file = event.target.files?.[0]
+                  void handlePhotoUpload(file)
+                  event.target.value = ''
+                }}
+              />
+            </label>
+          </div>
+
+          <button
+            className="gallery-download-button"
+            disabled={downloadingGallery || photos.length === 0}
+            onClick={() => void downloadGallery()}
           >
-            {uploading
-              ? 'Foto wird hochgeladen…'
-              : 'Foto aufnehmen / auswählen'}
-
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              disabled={uploading}
-              onChange={event => {
-                const file =
-                  event.target.files?.[0]
-
-                void handlePhotoUpload(file)
-
-                event.target.value = ''
-              }}
-            />
-          </label>
+            {downloadingGallery
+              ? 'Galerie wird vorbereitet…'
+              : `Gesamte Galerie herunterladen (${photos.length})`}
+          </button>
 
           {message && (
             <p
@@ -549,16 +633,17 @@ export default function App() {
               className="photo-card"
               key={photo.id}
             >
-              <img
-                src={photoUrl(
-                  photo.storage_path,
-                )}
-                alt={`Foto von ${
-                  photo.users?.username ??
-                  'Gast'
-                }`}
-                loading="lazy"
-              />
+              <button
+                className="photo-open-button"
+                onClick={() => setSelectedPhoto(photo)}
+                aria-label={`Foto von ${photo.users?.username ?? 'Gast'} groß anzeigen`}
+              >
+                <img
+                  src={photoUrl(photo.storage_path)}
+                  alt={`Foto von ${photo.users?.username ?? 'Gast'}`}
+                  loading="lazy"
+                />
+              </button>
 
               <div className="photo-info">
                 <strong>
@@ -569,6 +654,34 @@ export default function App() {
             </article>
           ))}
         </section>
+
+        {selectedPhoto && (
+          <div
+            className="photo-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Große Fotoansicht"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <button
+              className="lightbox-close"
+              onClick={() => setSelectedPhoto(null)}
+              aria-label="Fotoansicht schließen"
+            >
+              ×
+            </button>
+
+            <figure onClick={event => event.stopPropagation()}>
+              <img
+                src={photoUrl(selectedPhoto.storage_path)}
+                alt={`Foto von ${selectedPhoto.users?.username ?? 'Gast'}`}
+              />
+              <figcaption>
+                Foto von <strong>{selectedPhoto.users?.username ?? 'Gast'}</strong>
+              </figcaption>
+            </figure>
+          </div>
+        )}
 
         {photos.length === 0 && (
           <section className="empty-card">

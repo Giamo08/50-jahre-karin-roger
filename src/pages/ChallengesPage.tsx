@@ -255,32 +255,36 @@ export default function ChallengesPage({ player, onBack }: Props) {
               )}
 
               {assignment.status === 'open' && (
-                <label
-                  className={`upload-button ${
-                    uploadingId === assignment.id ? 'disabled' : ''
-                  }`}
-                >
-                  {uploadingId === assignment.id
-                    ? 'Foto wird hochgeladen…'
-                    : 'Foto aufnehmen / auswählen'}
+                <div className="upload-choice-grid">
+                  <label className={`upload-button ${uploadingId === assignment.id ? 'disabled' : ''}`}>
+                    {uploadingId === assignment.id ? 'Wird hochgeladen…' : '📷 Foto aufnehmen'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      disabled={uploadingId !== null}
+                      onChange={event => {
+                        const file = event.target.files?.[0]
+                        void uploadChallengePhoto(assignment, file)
+                        event.target.value = ''
+                      }}
+                    />
+                  </label>
 
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    disabled={uploadingId !== null}
-                    onChange={event => {
-                      const file = event.target.files?.[0]
-
-                      void uploadChallengePhoto(
-                        assignment,
-                        file,
-                      )
-
-                      event.target.value = ''
-                    }}
-                  />
-                </label>
+                  <label className={`upload-secondary-button ${uploadingId === assignment.id ? 'disabled' : ''}`}>
+                    🖼️ Foto hochladen
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingId !== null}
+                      onChange={event => {
+                        const file = event.target.files?.[0]
+                        void uploadChallengePhoto(assignment, file)
+                        event.target.value = ''
+                      }}
+                    />
+                  </label>
+                </div>
               )}
             </article>
           ))}

@@ -362,3 +362,36 @@ ol li { border-top-color: #e3e0d8; }
 @media (min-width: 700px) {
   .gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+.gallery-download-button {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #777565;
+  border-radius: 0;
+  padding: 15px 16px;
+  background: transparent;
+  color: #4f4e48;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .78rem;
+}
+.gallery-download-button:disabled { opacity: .45; cursor: not-allowed; }
+.upload-card .status-message, .upload-card .success { color: #4f4e48; }
+.photo-open-button { display: block; width: 100%; border: 0; padding: 0; background: transparent; overflow: hidden; }
+.photo-open-button img { transition: transform .25s ease; }
+.photo-open-button:hover img { transform: scale(1.025); }
+.photo-lightbox { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgba(20, 20, 18, .94); }
+.photo-lightbox figure { max-width: min(1100px, 100%); max-height: calc(100vh - 48px); margin: 0; background: #fff; overflow: auto; }
+.photo-lightbox img { display: block; max-width: 100%; max-height: calc(100vh - 115px); width: auto; height: auto; margin: auto; object-fit: contain; }
+.photo-lightbox figcaption { padding: 14px 18px; color: #242424; border-top: 1px solid #d9d6cd; }
+.lightbox-close { position: fixed; top: 14px; right: 18px; z-index: 1001; width: 46px; height: 46px; border: 1px solid rgba(255,255,255,.5); border-radius: 50%; background: rgba(0,0,0,.2); color: white; font-size: 2rem; line-height: 1; }
+
+.upload-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.upload-secondary-button { display: block; width: 100%; padding: 16px; border: 1px solid #777565; background: #fff; color: #4f4e48; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; cursor: pointer; }
+.upload-secondary-button input { display: none; }
+.upload-secondary-button.disabled { opacity: .5; cursor: wait; }
+
+@media (max-width: 520px) {
+  .upload-choice-grid { grid-template-columns: 1fr; }
+}
