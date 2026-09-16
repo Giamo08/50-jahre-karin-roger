@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase'
 import ChallengesPage from './pages/ChallengesPage'
 import HostPage from './pages/HostPage'
+import RiddlesPage from './pages/RiddlesPage'
 import './index.css'
 
 type Player = {
@@ -20,7 +21,7 @@ type Photo = {
   } | null
 }
 
-type Page = 'home' | 'gallery' | 'challenges'
+type Page = 'home' | 'gallery' | 'challenges' | 'riddles'
 
 const STORAGE_KEY = 'karin-roger-player'
 const HOST_TOKEN_KEY = 'karin-roger-host-token'
@@ -442,6 +443,24 @@ export default function App() {
   }
 
   // ==========================================
+  // RÄTSEL
+  // ==========================================
+
+  if (page === 'riddles') {
+    return (
+      <RiddlesPage
+        player={player}
+        onBack={() => {
+          setPage('home')
+          setMessage('')
+
+          void loadLeaderboard()
+        }}
+      />
+    )
+  }
+
+  // ==========================================
   // GALERIE
   // ==========================================
 
@@ -629,7 +648,10 @@ export default function App() {
 
         <button
           className="menu-card"
-          disabled
+          onClick={() => {
+            setPage('riddles')
+            setMessage('')
+          }}
         >
           <span>🧩</span>
 
@@ -638,7 +660,7 @@ export default function App() {
           </strong>
 
           <small>
-            kommt als Nächstes
+            Rätsel lösen & Punkte sammeln
           </small>
         </button>
 
