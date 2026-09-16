@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase'
+import ChallengesPage from './pages/ChallengesPage'
+import HostPage from './pages/HostPage'
 import './index.css'
 
 type Player = {
@@ -18,27 +20,47 @@ type Photo = {
   } | null
 }
 
-type Page = 'home' | 'gallery'
+type Page = 'home' | 'gallery' | 'challenges'
 
 const STORAGE_KEY = 'karin-roger-player'
+const HOST_TOKEN_KEY = 'karin-roger-host-token'
 
 export default function App() {
   const [player, setPlayer] = useState<Player | null>(null)
+  const [hostToken, setHostToken] = useState<string | null>(null)
+
   const [username, setUsername] = useState('')
   const [leaderboard, setLeaderboard] = useState<Player[]>([])
   const [photos, setPhotos] = useState<Photo[]>([])
+
   const [page, setPage] = useState<Page>('home')
+
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) setPlayer(JSON.parse(saved))
+    const savedPlayer = localStorage.getItem(STORAGE_KEY)
+    const savedHostToken = sessionStorage.getItem(HOST_TOKEN_KEY)
+
+    if (savedHostToken) {
+      setHostToken(savedHostToken)
+      return
+    }
+
+    if (savedPlayer) {
+      try {
+        setPlayer(JSON.parse(savedPlayer))
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    }
   }, [])
 
   useEffect(() => {
-    void loadLeaderboard()
+    if (player) {
+      void loadLeaderboard()
+    }
   }, [player])
 
   async function loadLeaderboard() {
@@ -50,7 +72,24 @@ export default function App() {
       .order('points', { ascending: false })
       .limit(100)
 
-    if (data) setLeaderboard(data)
+    if (data) {
+      setLeaderboard(data)
+
+      if (player) {
+        const updatedPlayer = data.find(
+          entry => entry.id === player.id,
+        )
+
+        if (updatedPlayer) {
+          setPlayer(updatedPlayer)
+
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(updatedPlayer),
+          )
+        }
+      }
+    }
   }
 
   async function loadPhotos() {
@@ -81,38 +120,102 @@ export default function App() {
     event.preventDefault()
 
     const cleanName = username.trim()
+
     if (!cleanName || !supabase) return
 
     setLoading(true)
     setMessage('')
 
-    const { data, error } = await supabase.rpc('get_or_create_user', {
-      input_username: cleanName,
-    })
+    try {
+      // Genau 6 Ziffern werden als Host-PIN geprüft
+      if (/^\d{6}$/.test(cleanName)) {
+        const { data, error } = await supabase.rpc(
+          'host_login',
+          {
+            input_pin: cleanName,
+          },
+        )
 
-    setLoading(false)
+        if (error) {
+          setMessage('Host-Kürzel ist nicht korrekt.')
+          return
+        }
 
-    if (error || !data?.length) {
-      setMessage(error?.message ?? 'Anmeldung fehlgeschlagen.')
-      return
+        if (!data) {
+          setMessage('Host-Anmeldung fehlgeschlagen.')
+          return
+        }
+
+        const token = data as string
+
+        sessionStorage.setItem(
+          HOST_TOKEN_KEY,
+          token,
+        )
+
+        localStorage.removeItem(STORAGE_KEY)
+
+        setPlayer(null)
+        setHostToken(token)
+        setUsername('')
+
+        return
+      }
+
+      // Normaler Gast-Login
+      const { data, error } = await supabase.rpc(
+        'get_or_create_user',
+        {
+          input_username: cleanName,
+        },
+      )
+
+      if (error || !data?.length) {
+        setMessage(
+          error?.message ??
+            'Anmeldung fehlgeschlagen.',
+        )
+        return
+      }
+
+      const nextPlayer = data[0] as Player
+
+      sessionStorage.removeItem(HOST_TOKEN_KEY)
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(nextPlayer),
+      )
+
+      setHostToken(null)
+      setPlayer(nextPlayer)
+      setUsername('')
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Anmeldung fehlgeschlagen.',
+      )
+    } finally {
+      setLoading(false)
     }
-
-    const nextPlayer = data[0] as Player
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextPlayer))
-    setPlayer(nextPlayer)
-    setUsername('')
   }
 
   async function compressImage(file: File): Promise<Blob> {
     const bitmap = await createImageBitmap(file)
 
     const maxSize = 1600
-    const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height))
+
+    const scale = Math.min(
+      1,
+      maxSize / Math.max(bitmap.width, bitmap.height),
+    )
 
     const width = Math.round(bitmap.width * scale)
     const height = Math.round(bitmap.height * scale)
 
     const canvas = document.createElement('canvas')
+
     canvas.width = width
     canvas.height = height
 
@@ -120,17 +223,34 @@ export default function App() {
 
     if (!context) {
       bitmap.close()
-      throw new Error('Bild konnte nicht verarbeitet werden.')
+
+      throw new Error(
+        'Bild konnte nicht verarbeitet werden.',
+      )
     }
 
-    context.drawImage(bitmap, 0, 0, width, height)
+    context.drawImage(
+      bitmap,
+      0,
+      0,
+      width,
+      height,
+    )
+
     bitmap.close()
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(
         blob => {
-          if (blob) resolve(blob)
-          else reject(new Error('Bild konnte nicht komprimiert werden.'))
+          if (blob) {
+            resolve(blob)
+          } else {
+            reject(
+              new Error(
+                'Bild konnte nicht komprimiert werden.',
+              ),
+            )
+          }
         },
         'image/jpeg',
         0.82,
@@ -150,29 +270,37 @@ export default function App() {
       const filename =
         `${player.id}/${crypto.randomUUID()}.jpg`
 
-      const { error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(filename, compressed, {
-          contentType: 'image/jpeg',
-          cacheControl: '3600',
-          upsert: false,
-        })
+      const { error: uploadError } =
+        await supabase.storage
+          .from('photos')
+          .upload(filename, compressed, {
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: false,
+          })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        throw uploadError
+      }
 
-      const { error: databaseError } = await supabase
-        .from('photos')
-        .insert({
-          user_id: player.id,
-          storage_path: filename,
-        })
+      const { error: databaseError } =
+        await supabase
+          .from('photos')
+          .insert({
+            user_id: player.id,
+            storage_path: filename,
+          })
 
       if (databaseError) {
-        await supabase.storage.from('photos').remove([filename])
+        await supabase.storage
+          .from('photos')
+          .remove([filename])
+
         throw databaseError
       }
 
       setMessage('Foto erfolgreich hochgeladen.')
+
       await loadPhotos()
     } catch (error) {
       setMessage(
@@ -194,26 +322,65 @@ export default function App() {
       .data.publicUrl
   }
 
+  // ==========================================
+  // BENUTZER WECHSELN
+  // ==========================================
+
   function switchUser() {
     localStorage.removeItem(STORAGE_KEY)
-    setPlayer(null)
-    setPage('home')
-    setPhotos([])
-    setMessage('')
+    sessionStorage.removeItem(HOST_TOKEN_KEY)
+
+    window.location.reload()
+  }
+
+  // ==========================================
+  // HOST ABMELDEN
+  // ==========================================
+
+  function logoutHost() {
+    sessionStorage.removeItem(HOST_TOKEN_KEY)
+    localStorage.removeItem(STORAGE_KEY)
+
+    window.location.reload()
   }
 
   const rank = useMemo(() => {
-    if (!player || leaderboard.length === 0) return null
+    if (!player || leaderboard.length === 0) {
+      return null
+    }
 
-    const index = leaderboard.findIndex(entry => entry.id === player.id)
+    const index = leaderboard.findIndex(
+      entry => entry.id === player.id,
+    )
+
     return index >= 0 ? index + 1 : null
   }, [leaderboard, player])
+
+  // ==========================================
+  // HOST
+  // ==========================================
+
+  if (hostToken) {
+    return (
+      <HostPage
+        hostToken={hostToken}
+        onLogout={logoutHost}
+      />
+    )
+  }
+
+  // ==========================================
+  // LOGIN
+  // ==========================================
 
   if (!player) {
     return (
       <main className="shell login-shell">
         <section className="hero-card">
-          <p className="eyebrow">Geburtstagsfest</p>
+          <p className="eyebrow">
+            Geburtstagsfest
+          </p>
+
           <h1>
             50 Jahre
             <br />
@@ -221,28 +388,62 @@ export default function App() {
           </h1>
 
           <p className="subtle">
-            Gib deinen Benutzernamen ein und los geht&apos;s.
+            Gib deinen Benutzernamen ein und los
+            geht&apos;s.
           </p>
 
-          <form onSubmit={handleLogin} className="login-form">
+          <form
+            onSubmit={handleLogin}
+            className="login-form"
+          >
             <input
               value={username}
-              onChange={event => setUsername(event.target.value)}
+              onChange={event =>
+                setUsername(event.target.value)
+              }
               placeholder="Benutzername"
               maxLength={30}
-              autoComplete="nickname"
+              autoComplete="off"
             />
 
             <button disabled={loading}>
-              {loading ? 'Anmelden…' : 'Starten'}
+              {loading
+                ? 'Anmelden…'
+                : 'Starten'}
             </button>
           </form>
 
-          {message && <p className="error">{message}</p>}
+          {message && (
+            <p className="error">
+              {message}
+            </p>
+          )}
         </section>
       </main>
     )
   }
+
+  // ==========================================
+  // FOTO-CHALLENGES
+  // ==========================================
+
+  if (page === 'challenges') {
+    return (
+      <ChallengesPage
+        player={player}
+        onBack={() => {
+          setPage('home')
+          setMessage('')
+
+          void loadLeaderboard()
+        }}
+      />
+    )
+  }
+
+  // ==========================================
+  // GALERIE
+  // ==========================================
 
   if (page === 'gallery') {
     return (
@@ -258,16 +459,27 @@ export default function App() {
             ← Zurück
           </button>
 
-          <p className="eyebrow">50 Jahre Karin & Roger</p>
+          <p className="eyebrow">
+            50 Jahre Karin & Roger
+          </p>
+
           <h1>Fotogalerie</h1>
+
           <p className="subtle">
-            Teile deine Fotos vom Abend mit allen Gästen.
+            Teile deine Fotos vom Abend mit allen
+            Gästen.
           </p>
         </header>
 
         <section className="upload-card">
-          <label className={`upload-button ${uploading ? 'disabled' : ''}`}>
-            {uploading ? 'Foto wird hochgeladen…' : 'Foto aufnehmen / auswählen'}
+          <label
+            className={`upload-button ${
+              uploading ? 'disabled' : ''
+            }`}
+          >
+            {uploading
+              ? 'Foto wird hochgeladen…'
+              : 'Foto aufnehmen / auswählen'}
 
             <input
               type="file"
@@ -275,15 +487,24 @@ export default function App() {
               capture="environment"
               disabled={uploading}
               onChange={event => {
-                const file = event.target.files?.[0]
+                const file =
+                  event.target.files?.[0]
+
                 void handlePhotoUpload(file)
+
                 event.target.value = ''
               }}
             />
           </label>
 
           {message && (
-            <p className={message.includes('erfolgreich') ? 'success' : 'status-message'}>
+            <p
+              className={
+                message.includes('erfolgreich')
+                  ? 'success'
+                  : 'status-message'
+              }
+            >
               {message}
             </p>
           )}
@@ -291,15 +512,26 @@ export default function App() {
 
         <section className="gallery-grid">
           {photos.map(photo => (
-            <article className="photo-card" key={photo.id}>
+            <article
+              className="photo-card"
+              key={photo.id}
+            >
               <img
-                src={photoUrl(photo.storage_path)}
-                alt={`Foto von ${photo.users?.username ?? 'Gast'}`}
+                src={photoUrl(
+                  photo.storage_path,
+                )}
+                alt={`Foto von ${
+                  photo.users?.username ??
+                  'Gast'
+                }`}
                 loading="lazy"
               />
 
               <div className="photo-info">
-                <strong>{photo.users?.username ?? 'Gast'}</strong>
+                <strong>
+                  {photo.users?.username ??
+                    'Gast'}
+                </strong>
               </div>
             </article>
           ))}
@@ -307,31 +539,53 @@ export default function App() {
 
         {photos.length === 0 && (
           <section className="empty-card">
-            <strong>Noch keine Fotos</strong>
-            <p>Sei der Erste und lade ein Foto hoch.</p>
+            <strong>
+              Noch keine Fotos
+            </strong>
+
+            <p>
+              Sei der Erste und lade ein Foto hoch.
+            </p>
           </section>
         )}
       </main>
     )
   }
 
+  // ==========================================
+  // STARTSEITE
+  // ==========================================
+
   return (
     <main className="shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">50 Jahre Karin & Roger</p>
-          <h1>Hallo, {player.username}</h1>
+          <p className="eyebrow">
+            50 Jahre Karin & Roger
+          </p>
+
+          <h1>
+            Hallo, {player.username}
+          </h1>
         </div>
 
         <div className="score-card">
-          <strong>{player.points}</strong>
+          <strong>
+            {player.points}
+          </strong>
+
           <span>Punkte</span>
         </div>
       </header>
 
       <section className="rank-card">
-        <span>Dein aktueller Platz</span>
-        <strong>{rank ? `#${rank}` : '–'}</strong>
+        <span>
+          Dein aktueller Platz
+        </span>
+
+        <strong>
+          {rank ? `#${rank}` : '–'}
+        </strong>
       </section>
 
       <section className="menu-grid">
@@ -340,60 +594,111 @@ export default function App() {
           onClick={() => {
             setPage('gallery')
             setMessage('')
+
             void loadPhotos()
           }}
         >
           <span>📷</span>
-          <strong>Fotogalerie</strong>
-          <small>Fotos ansehen & hochladen</small>
+
+          <strong>
+            Fotogalerie
+          </strong>
+
+          <small>
+            Fotos ansehen & hochladen
+          </small>
         </button>
 
-        <button className="menu-card" disabled>
+        <button
+          className="menu-card"
+          onClick={() => {
+            setPage('challenges')
+            setMessage('')
+          }}
+        >
           <span>🎯</span>
-          <strong>Foto-Challenges</strong>
-          <small>kommt als Nächstes</small>
+
+          <strong>
+            Foto-Challenges
+          </strong>
+
+          <small>
+            4 Aufgaben entdecken
+          </small>
         </button>
 
-        <button className="menu-card" disabled>
+        <button
+          className="menu-card"
+          disabled
+        >
           <span>🧩</span>
-          <strong>Rätsel</strong>
-          <small>kommt als Nächstes</small>
+
+          <strong>
+            Rätsel
+          </strong>
+
+          <small>
+            kommt als Nächstes
+          </small>
         </button>
 
-        <button className="menu-card" disabled>
+        <button
+          className="menu-card"
+          disabled
+        >
           <span>🏆</span>
-          <strong>Live-Quiz</strong>
-          <small>kommt als Nächstes</small>
+
+          <strong>
+            Live-Quiz
+          </strong>
+
+          <small>
+            kommt als Nächstes
+          </small>
         </button>
       </section>
 
       <section className="leaderboard-card">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Rangliste</p>
+            <p className="eyebrow">
+              Rangliste
+            </p>
+
             <h2>Top 3</h2>
           </div>
         </div>
 
         <ol>
-          {leaderboard.slice(0, 3).map((entry, index) => (
-            <li key={entry.id}>
-              <span>
-                {index + 1}. {entry.username}
-              </span>
-              <strong>{entry.points} P.</strong>
-            </li>
-          ))}
+          {leaderboard
+            .slice(0, 3)
+            .map((entry, index) => (
+              <li key={entry.id}>
+                <span>
+                  {index + 1}.{' '}
+                  {entry.username}
+                </span>
+
+                <strong>
+                  {entry.points} P.
+                </strong>
+              </li>
+            ))}
 
           {leaderboard.length === 0 && (
             <li>
-              <span>Noch keine Einträge</span>
+              <span>
+                Noch keine Einträge
+              </span>
             </li>
           )}
         </ol>
       </section>
 
-      <button className="text-button" onClick={switchUser}>
+      <button
+        className="text-button"
+        onClick={switchUser}
+      >
         Benutzer wechseln
       </button>
     </main>

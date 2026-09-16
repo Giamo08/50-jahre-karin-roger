@@ -1,134 +1,133 @@
-:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f9fafb; background: #0b1020; font-synthesis: none; }
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f9fafb;
+  background: #0b1020;
+  font-synthesis: none;
+}
+
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at top, #28324f 0, #111827 45%, #090d16 100%); }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #28324f 0, #111827 45%, #090d16 100%);
+}
+
 button, input { font: inherit; }
 button { cursor: pointer; }
-.shell { width: min(100% - 28px, 760px); margin: 0 auto; padding: 28px 0 48px; }
+
+.shell {
+  width: min(100% - 28px, 760px);
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+
 .login-shell { min-height: 100vh; display: grid; place-items: center; }
-.hero-card, .leaderboard-card, .rank-card { background: rgba(17, 24, 39, .78); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(18px); box-shadow: 0 18px 50px rgba(0,0,0,.28); border-radius: 26px; }
+
+.hero-card,
+.leaderboard-card,
+.rank-card {
+  background: rgba(17, 24, 39, .88);
+  border: 1px solid rgba(255, 255, 255, .14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+  border-radius: 26px;
+}
+
 .hero-card { width: 100%; padding: 34px 24px; text-align: center; }
 .hero-card h1 { margin: 8px 0 12px; font-size: clamp(2.5rem, 12vw, 4.8rem); line-height: .96; letter-spacing: -.05em; }
 .eyebrow { margin: 0; text-transform: uppercase; letter-spacing: .18em; font-size: .72rem; font-weight: 800; color: #f5d488; }
-.subtle { color: #b8c0d4; }
+.subtle { color: #d3d8e5; line-height: 1.55; }
 .login-form { display: grid; gap: 12px; margin-top: 26px; }
-.login-form input { border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 16px 18px; background: rgba(255,255,255,.07); color: white; outline: none; }
+.login-form input { border: 1px solid rgba(255, 255, 255, .18); border-radius: 16px; padding: 16px 18px; background: rgba(255, 255, 255, .08); color: white; outline: none; }
 .login-form input:focus { border-color: #f5d488; }
 .login-form button { border: 0; border-radius: 16px; padding: 16px 18px; font-weight: 900; background: #f5d488; color: #1f2937; }
 .error { color: #fca5a5; font-size: .9rem; }
+
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .topbar h1 { margin: 6px 0 0; font-size: clamp(1.8rem, 8vw, 3rem); letter-spacing: -.04em; }
 .score-card { min-width: 92px; padding: 14px; border-radius: 20px; background: #f5d488; color: #111827; text-align: center; }
 .score-card strong { display: block; font-size: 1.6rem; }
 .score-card span { font-size: .72rem; font-weight: 800; text-transform: uppercase; }
 .rank-card { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-.rank-card span { color: #c5ccda; }
+.rank-card span { color: #d3d8e5; }
 .rank-card strong { font-size: 2rem; }
+
 .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
-.menu-card { min-height: 148px; border: 1px solid rgba(255,255,255,.1); border-radius: 22px; padding: 18px; background: rgba(255,255,255,.055); color: white; text-align: left; opacity: .85; }
+.menu-card { min-height: 148px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 22px; padding: 18px; background: rgba(255, 255, 255, .07); color: white; text-align: left; opacity: .9; }
 .menu-card span { display: block; font-size: 2rem; margin-bottom: 22px; }
 .menu-card strong, .menu-card small { display: block; }
 .menu-card strong { font-size: 1.05rem; }
-.menu-card small { color: #9ca3af; margin-top: 4px; }
+.menu-card small { color: #c3c9d6; margin-top: 4px; }
 .leaderboard-card { padding: 22px; }
 .section-heading h2 { margin: 4px 0 14px; }
 ol { list-style: none; padding: 0; margin: 0; }
-ol li { display: flex; justify-content: space-between; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.08); }
-.text-button { width: 100%; margin-top: 16px; background: transparent; border: 0; color: #9ca3af; padding: 12px; }
-@media (max-width: 480px) { .menu-grid { grid-template-columns: 1fr; } .topbar { align-items: flex-end; } }
-.page-header {
-  margin-bottom: 24px;
-}
+ol li { display: flex; justify-content: space-between; padding: 13px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+.text-button { width: 100%; margin-top: 16px; background: transparent; border: 0; color: #c3c9d6; padding: 12px; }
 
-.page-header h1 {
-  margin: 8px 0;
-}
-
-.back-button {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  margin-bottom: 24px;
-  font: inherit;
-  cursor: pointer;
-}
+.page-header { margin-bottom: 24px; }
+.page-header h1 { margin: 8px 0; font-size: clamp(2rem, 9vw, 3.5rem); line-height: 1.05; }
+.back-button { border: 0; background: transparent; color: #f9fafb; padding: 8px 0; margin-bottom: 20px; font-weight: 800; }
 
 .upload-card,
 .empty-card {
-  background: white;
+  background: #ffffff;
+  color: #111827;
   border-radius: 24px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
 }
 
 .upload-button {
   display: block;
   width: 100%;
-  box-sizing: border-box;
   padding: 16px;
   border-radius: 16px;
   background: #171717;
-  color: white;
+  color: #ffffff;
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
-.upload-button.disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
+.upload-button.disabled { opacity: .6; cursor: wait; }
+.upload-button input { display: none; }
 
-.upload-button input {
-  display: none;
-}
+.gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.photo-card { overflow: hidden; border: 1px solid rgba(255, 255, 255, .14); border-radius: 18px; background: #111827; box-shadow: 0 8px 24px rgba(0, 0, 0, .28); }
+.photo-card img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
+.photo-info { min-height: 48px; display: flex; align-items: center; padding: 12px 14px; background: #111827; color: #ffffff; font-size: 1rem; line-height: 1.3; }
+.photo-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.photo-card {
-  overflow: hidden;
-  border-radius: 18px;
-  background: white;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
-}
-
-.photo-card img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
-
-.photo-info {
-  padding: 10px 12px;
-  font-size: 0.85rem;
-}
+.challenge-list { display: grid; gap: 16px; }
+.challenge-card { padding: 22px; border: 2px solid rgba(255, 255, 255, .16); border-radius: 24px; background: #ffffff; color: #111827; box-shadow: 0 10px 30px rgba(0, 0, 0, .22); }
+.challenge-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.challenge-heading h2 { margin: 0; color: #0f172a; font-size: clamp(1.35rem, 6vw, 1.8rem); line-height: 1.2; letter-spacing: -.02em; }
+.challenge-heading > strong { flex: 0 0 auto; padding: 7px 10px; border-radius: 999px; background: #f5d488; color: #111827; font-size: .9rem; white-space: nowrap; }
+.challenge-card > p { margin: 14px 0 18px; color: #334155; font-size: 1.05rem; font-weight: 600; line-height: 1.55; }
+.challenge-pending { border-color: #f5d488; }
+.challenge-completed { border-color: #4ade80; background: #f0fdf4; }
+.challenge-status { padding: 13px 15px; border-radius: 14px; font-weight: 800; text-align: center; }
+.challenge-status.pending { background: #fff7d6; color: #713f12; }
+.challenge-status.completed { background: #dcfce7; color: #14532d; }
+.next-challenges-card { margin-top: 18px; padding: 22px; border-radius: 24px; background: #f5d488; color: #111827; text-align: center; }
+.next-challenges-card p { line-height: 1.5; }
+.next-challenges-card button { width: 100%; border: 0; border-radius: 16px; padding: 15px 18px; background: #111827; color: white; font-weight: 800; }
 
 .status-message,
-.success {
-  margin: 14px 0 0;
-  text-align: center;
-  font-size: 0.9rem;
-}
+.success { margin: 14px 0 0; text-align: center; font-size: .95rem; font-weight: 700; color: #f9fafb; }
+.empty-card { text-align: center; }
+.empty-card p { margin-bottom: 0; color: #475569; line-height: 1.5; }
 
-.success {
-  font-weight: 600;
-}
-
-.empty-card {
-  text-align: center;
-}
-
-.empty-card p {
-  margin-bottom: 0;
+@media (max-width: 480px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .topbar { align-items: flex-end; }
+  .challenge-heading { display: grid; }
+  .challenge-heading > strong { justify-self: start; }
 }
 
 @media (min-width: 700px) {
-  .gallery-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  .gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
