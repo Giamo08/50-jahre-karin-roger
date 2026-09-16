@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase'
 import ChallengesPage from './pages/ChallengesPage'
 import HostPage from './pages/HostPage'
 import RiddlesPage from './pages/RiddlesPage'
+import QuizPage from './pages/QuizPage'
 import './index.css'
 
 type Player = {
@@ -21,7 +22,7 @@ type Photo = {
   } | null
 }
 
-type Page = 'home' | 'gallery' | 'challenges' | 'riddles'
+type Page = 'home' | 'gallery' | 'challenges' | 'riddles' | 'quiz'
 
 const STORAGE_KEY = 'karin-roger-player'
 const HOST_TOKEN_KEY = 'karin-roger-host-token'
@@ -460,6 +461,19 @@ export default function App() {
     )
   }
 
+  if (page === 'quiz') {
+    return (
+      <QuizPage
+        player={player}
+        onBack={() => {
+          setPage('home')
+          setMessage('')
+          void loadLeaderboard()
+        }}
+      />
+    )
+  }
+
   // ==========================================
   // GALERIE
   // ==========================================
@@ -666,7 +680,10 @@ export default function App() {
 
         <button
           className="menu-card"
-          disabled
+          onClick={() => {
+            setPage('quiz')
+            setMessage('')
+          }}
         >
           <span>🏆</span>
 
@@ -675,7 +692,7 @@ export default function App() {
           </strong>
 
           <small>
-            kommt als Nächstes
+            Gemeinsam live spielen
           </small>
         </button>
       </section>

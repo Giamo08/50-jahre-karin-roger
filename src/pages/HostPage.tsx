@@ -24,6 +24,19 @@ type Props = {
   onLogout: () => void
 }
 
+type HostQuizState = {
+  status: 'waiting' | 'question' | 'revealed' | 'finished'
+  question_number: number
+  total_questions: number
+  question: string | null
+  options: string[]
+  correct_option: number | null
+  points: number
+  answer_counts: number[]
+  answered_count: number
+  player_count: number
+}
+
 export default function HostPage({
   hostToken,
   onLogout,
@@ -32,10 +45,43 @@ export default function HostPage({
   const [loading, setLoading] = useState(true)
   const [reviewingId, setReviewingId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const [quiz, setQuiz] = useState<HostQuizState | null>(null)
+  const [quizBusy, setQuizBusy] = useState(false)
 
   useEffect(() => {
     void loadSubmissions()
+    void loadQuiz()
+    const timer = window.setInterval(() => void loadQuiz(), 1500)
+    return () => window.clearInterval(timer)
   }, [])
+
+  async function loadQuiz() {
+    if (!supabase) return
+    const { data, error } = await supabase.rpc('get_live_quiz_host', {
+      input_host_token: hostToken,
+    })
+    if (!error && data) {
+      setQuiz((Array.isArray(data) ? data[0] : data) as HostQuizState)
+    }
+  }
+
+  async function quizAction(action: 'start' | 'reveal' | 'next') {
+    if (!supabase) return
+    try {
+      setQuizBusy(true)
+      setMessage('')
+      const { error } = await supabase.rpc('control_live_quiz', {
+        input_host_token: hostToken,
+        input_action: action,
+      })
+      if (error) throw error
+      await loadQuiz()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Quiz konnte nicht gesteuert werden.')
+    } finally {
+      setQuizBusy(false)
+    }
+  }
 
   async function loadSubmissions() {
     if (!supabase) return
@@ -150,6 +196,53 @@ export default function HostPage({
             : 'offene Foto-Challenges'}
         </p>
       </header>
+
+      <section className="host-quiz-card">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Live-Quiz</p>
+            <h2>Quiz-Steuerung</h2>
+          </div>
+          <span className={`quiz-state-badge ${quiz?.status ?? 'waiting'}`}>
+            {quiz?.status === 'question' ? 'Abstimmung läuft' :
+             quiz?.status === 'revealed' ? 'Aufgelöst' :
+             quiz?.status === 'finished' ? 'Beendet' : 'Nicht gestartet'}
+          </span>
+        </div>
+
+        {quiz?.status === 'waiting' && (
+          <button className="host-quiz-primary" disabled={quizBusy} onClick={() => void quizAction('start')}>
+            Live-Quiz starten
+          </button>
+        )}
+
+        {quiz && (quiz.status === 'question' || quiz.status === 'revealed') && (
+          <>
+            <p className="host-quiz-progress">Frage {quiz.question_number} von {quiz.total_questions} · {quiz.points} Punkte</p>
+            <h3>{quiz.question}</h3>
+            <p className="host-vote-count"><strong>{quiz.answered_count}</strong> von {quiz.player_count} Teilnehmern haben abgestimmt</p>
+            <div className="host-answer-bars">
+              {quiz.options.map((option, index) => (
+                <div className={quiz.status === 'revealed' && quiz.correct_option === index ? 'correct' : ''} key={option}>
+                  <span>{String.fromCharCode(65 + index)} · {option}</span>
+                  <strong>{quiz.answer_counts[index] ?? 0}</strong>
+                </div>
+              ))}
+            </div>
+            {quiz.status === 'question' ? (
+              <button className="host-quiz-primary" disabled={quizBusy} onClick={() => void quizAction('reveal')}>
+                Antwort auflösen
+              </button>
+            ) : (
+              <button className="host-quiz-primary" disabled={quizBusy} onClick={() => void quizAction('next')}>
+                {quiz.question_number === quiz.total_questions ? 'Quiz beenden' : 'Nächste Frage'}
+              </button>
+            )}
+          </>
+        )}
+
+        {quiz?.status === 'finished' && <p className="host-quiz-finished">Das Live-Quiz ist beendet.</p>}
+      </section>
 
       <section className="host-toolbar">
         <button
