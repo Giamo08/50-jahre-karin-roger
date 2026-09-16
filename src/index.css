@@ -170,6 +170,183 @@ ol li { display: flex; justify-content: space-between; padding: 13px 0; border-t
 .host-quiz-primary:disabled { opacity: .55; }
 .host-quiz-finished { padding: 14px; border-radius: 14px; background: #dcfce7; color: #14532d; font-weight: 800; text-align: center; }
 
+/* Chesa-Salez-inspirierter Editorial-Stil */
+:root {
+  color: #242424;
+  background: #f2f0ea;
+}
+
+body {
+  background: #f2f0ea;
+  color: #242424;
+}
+
+h1, h2, h3,
+.hero-card h1,
+.topbar h1,
+.page-header h1,
+.challenge-heading h2,
+.riddle-card h2,
+.live-quiz-card h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .025em;
+}
+
+.shell {
+  width: min(100% - 32px, 820px);
+  padding-top: 38px;
+}
+
+.hero-card,
+.leaderboard-card,
+.rank-card,
+.upload-card,
+.empty-card,
+.challenge-card,
+.riddle-card,
+.riddle-finished-card,
+.quiz-waiting-card,
+.live-quiz-card,
+.host-quiz-card {
+  background: #fff;
+  color: #242424;
+  border: 1px solid #d9d6cd;
+  border-radius: 2px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.hero-card { padding: clamp(38px, 8vw, 72px) clamp(24px, 7vw, 64px); }
+.hero-card h1 { font-size: clamp(2.7rem, 12vw, 5.5rem); line-height: .98; letter-spacing: .015em; }
+
+.eyebrow {
+  color: #8a887b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .78rem;
+  letter-spacing: .24em;
+}
+
+.subtle,
+.rank-card span,
+.menu-card small,
+.text-button,
+.quiz-hint,
+.quiz-waiting-card p {
+  color: #6e6d66;
+}
+
+.login-form input,
+.riddle-form input {
+  background: #f7f6f2;
+  color: #242424;
+  border: 1px solid #aaa797;
+  border-radius: 0;
+}
+
+.login-form input:focus,
+.riddle-form input:focus {
+  border-color: #666456;
+  box-shadow: 0 0 0 2px rgba(135, 132, 112, .18);
+}
+
+.login-form button,
+.upload-button,
+.next-challenges-card button,
+.riddle-form button,
+.riddle-finished-card button,
+.host-quiz-primary {
+  border-radius: 0;
+  background: #777565;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .82rem;
+}
+
+.topbar h1 { color: #242424; }
+.score-card {
+  background: #9a9784;
+  color: #fff;
+  border-radius: 0;
+}
+
+.rank-card { border-left: 5px solid #9a9784; }
+
+.menu-grid { gap: 14px; }
+.menu-card {
+  background: #fff;
+  color: #242424;
+  border: 1px solid #d9d6cd;
+  border-radius: 0;
+  opacity: 1;
+  transition: transform .18s ease, border-color .18s ease;
+}
+.menu-card:hover { transform: translateY(-2px); border-color: #8f8c7b; }
+.menu-card strong { font-family: Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .06em; }
+
+.back-button { color: #4f4e48; text-transform: uppercase; letter-spacing: .1em; font-size: .78rem; }
+
+.photo-card { border-radius: 0; background: #fff; border-color: #d9d6cd; box-shadow: none; }
+.photo-info { background: #fff; color: #242424; border-top: 1px solid #e3e0d8; }
+
+.challenge-card { border-width: 1px; border-left: 5px solid #aaa797; }
+.challenge-completed { background: #f3f5ef; border-left-color: #7f8d72; }
+.challenge-pending { border-left-color: #b49b69; }
+.challenge-heading > strong,
+.riddle-meta strong {
+  background: #9a9784;
+  color: #fff;
+  border-radius: 0;
+}
+.challenge-card > p { color: #57564f; font-weight: 400; }
+
+.next-challenges-card { border-radius: 0; background: #d8d5c8; color: #242424; }
+
+.quiz-option {
+  background: #f7f6f2;
+  color: #242424;
+  border: 1px solid #c9c6bb;
+  border-radius: 0;
+}
+.quiz-option > span { border-radius: 0; background: #dedbd1; }
+.quiz-option.selected { border-color: #777565; background: #e9e6dc; }
+.quiz-option.correct { border-color: #78866b; background: #e8eee2; }
+.quiz-option.wrong { border-color: #9e716b; background: #f3e8e6; }
+
+.quiz-state-badge,
+.host-vote-count,
+.host-answer-bars > div,
+.riddle-message,
+.quiz-result,
+.challenge-status {
+  border-radius: 0;
+}
+
+ol li { border-top-color: #e3e0d8; }
+
+@media (min-width: 900px) {
+  body::before {
+    content: "50 JAHRE · KARIN & ROGER";
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    background: #fff;
+    border-right: 1px solid #d9d6cd;
+    color: #777565;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: .72rem;
+    letter-spacing: .22em;
+    z-index: 10;
+  }
+}
+
 .status-message,
 .success { margin: 14px 0 0; text-align: center; font-size: .95rem; font-weight: 700; color: #f9fafb; }
 .empty-card { text-align: center; }
